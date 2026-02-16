@@ -2,8 +2,10 @@ import { WalletMultiButton } from "@provablehq/aleo-wallet-adaptor-react-ui";
 import { useWallet } from "@provablehq/aleo-wallet-adaptor-react";
 import { useState, useEffect } from "react";
 
-function sha256(message) {
-  const msgBuffer = new TextEncoder().encode(message);
+function sha256(message, salt = "") {
+  const saltedMsg = salt + message;
+
+  const msgBuffer = new TextEncoder().encode(saltedMsg);
   return crypto.subtle.digest("SHA-256", msgBuffer).then((hashBuffer) => {
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -30,25 +32,32 @@ export default function HeroSection() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!publicKey) return;
+
     setIsSubmitting(true);
 
-    // Simulate processing
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    // We use the full string representation of the wallet address as the salt
+    const walletSalt = publicKey.toString();
 
-    const usernameHash = await sha256(username.trim().toLowerCase());
-    const secretHash = await sha256(secret.trim().toLowerCase());
-    setHashedData({ usernameHash, secretHash });
+    try {
+      // Production hashing: Salt + Data
+      const usernameHash = await sha256(
+        username.trim().toLowerCase(),
+        walletSalt,
+      );
+      const secretHash = await sha256(secret.trim().toLowerCase(), walletSalt);
 
-    console.log("Wallet:", publicKey?.toString());
-    console.log("Mode:", mode);
-    console.log("Username Hash:", usernameHash);
-    console.log("Secret Hash:", secretHash);
+      setHashedData({ usernameHash, secretHash });
+      setShowSuccess(true);
 
-    setIsSubmitting(false);
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 3000);
+      console.log("Unique Identity Hash Generated for:", walletSalt);
+    } catch (error) {
+      console.error("Hashing failed:", error);
+    } finally {
+      setIsSubmitting(false);
+      setTimeout(() => setShowSuccess(false), 3000);
+    }
   };
-
   return (
     <div className="min-h-screen flex flex-col items-center justify-center text-center px-6 relative overflow-hidden">
       {/* Animated background gradients */}
