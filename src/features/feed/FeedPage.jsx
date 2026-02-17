@@ -4,6 +4,7 @@ import CreatePostModal from "./components/CreatePostModal";
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
+import { useWallet } from "@provablehq/aleo-wallet-adaptor-react";
 
 const mockPosts = [
   {
@@ -35,10 +36,13 @@ const mockPosts = [
 export default function FeedPage() {
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState("" | null);
+  const { connected, address } = useWallet();
 
   const { ref, inView } = useInView();
 
   useEffect(() => {
+    console.log("is connected with address", connected, address);
+
     inView ? console.log("in view") : console.log("not in view");
   }, [ref, inView]);
 

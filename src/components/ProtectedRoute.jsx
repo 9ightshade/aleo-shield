@@ -3,33 +3,46 @@ import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 
 export default function ProtectedRoute({ children }) {
-  const { connected, connecting, address, requestRecords } = useWallet();
+  const { connected, connecting, address } = useWallet();
   const [checkingAuth, setCheckingAuth] = useState(true);
-  const [hasUserRecord, setHasUserRecord] = useState(false);
+  // const [hasUserRecord, setHasUserRecord] = useState(false);
 
   useEffect(() => {
     const verifyUser = async () => {
       if (connecting) return;
 
       if (!connected || !address) {
+        // setHasUserRecord(false);
         setCheckingAuth(false);
         return;
       }
 
-      try {
-        const records = await requestRecords("shadowsphere_social.aleo");
+      // try {
+      //   const records = await requestRecords("shadowsphere_social.aleo");
 
-        setHasUserRecord(records?.length > 0);
-      } catch (err) {
-        console.error("Record check failed:", err);
-        setHasUserRecord(false);
-      } finally {
-        setCheckingAuth(false);
-      }
+      //   if (!records || records.length === 0) {
+      //     setHasUserRecord(false);
+      //     return;
+      //   }
+
+      //   // ✅ STRICT FILTER
+      //   const userRecord = records.find(
+      //     (r) => r.recordName === "UserSecret" && !r.spent,
+      //   );
+
+      //   console.log("UserSecret record:", userRecord);
+
+      //   setHasUserRecord(!!userRecord);
+      // } catch (err) {
+      //   console.error("Record check failed:", err);
+      //   setHasUserRecord(false);
+      // } finally {
+      //   setCheckingAuth(false);
+      // }
     };
 
     verifyUser();
-  }, [connected, connecting, address, requestRecords]);
+  }, [connected, connecting, address]);
 
   // Loading State
   // We stay here as long as connecting is true OR we haven't finished our record check
@@ -46,15 +59,13 @@ export default function ProtectedRoute({ children }) {
 
   // Final Redirect Logic
   // Only redirect once we are CERTAIN checkingAuth is finished
-  if (!connected) {
-    return <Navigate to="/" replace />;
-  }
+  // if (!connected) {
+  //   return <Navigate to="/" replace />;
+  // }
 
-  if (!hasUserRecord) {
-    // Optional: You might want to redirect to a /register page
-    // instead of home if they have a wallet but no record.
-    return <Navigate to="/" replace />;
-  }
+  // if (!hasUserRecord) {
+  //   return <Navigate to="/" replace />;
+  // }
 
   return children;
 }

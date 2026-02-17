@@ -29,7 +29,7 @@ const mockTransactions = [
 ];
 
 export default function WalletPage() {
-  const { publicKey, connected, disconnect } = useWallet();
+  const { address, connected, disconnect, connect } = useWallet();
 
   return (
     <div className="flex flex-col gap-8">
@@ -41,9 +41,14 @@ export default function WalletPage() {
       {connected && (
         <>
           <p>Address:</p>
-          <p className="break-all">{publicKey?.toString()}</p>
+          <p className="break-all">{address?.toString()}</p>
 
-          <button onClick={disconnect}>Disconnect</button>
+          <button
+            onClick={() => {
+              connected ? disconnect : connect;
+            }}>
+            {connected ? "Disconnect" : "Connect"}
+          </button>
         </>
       )}
     </div>
