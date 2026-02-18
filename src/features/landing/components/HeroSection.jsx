@@ -1,7 +1,6 @@
 import { WalletMultiButton } from "@provablehq/aleo-wallet-adaptor-react-ui";
 import { useWallet } from "@provablehq/aleo-wallet-adaptor-react";
 import { useState, useEffect } from "react";
-// import { stringToField } from "../../../lib/stringToField";
 import { useNavigate } from "react-router-dom";
 
 export default function HeroSection() {
@@ -13,15 +12,12 @@ export default function HeroSection() {
     transactionStatus,
   } = useWallet();
   const [mode, setMode] = useState("verify_login");
-  const programName = "shadowsphere_social6.aleo";
-  // const [username, setUsername] = useState("");
-  // const [secret, setSecret] = useState("");
+  const programName = "shadowsphere_social9.aleo";
   const [hashedData, setHashedData] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [isFetchingRecords, setIsFetchingRecords] = useState(false);
-  // const [authStatus, setAuthStatus] = useState("idle");
-  // idle | checking | registered | unregistered
+
   const navigate = useNavigate();
   const fetchUserRecords = async () => {
     // 1. Safety Guard: Ensure wallet is connected and publicKey is ready
@@ -53,8 +49,6 @@ export default function HeroSection() {
   useEffect(() => {
     if (!connected && !address) {
       setHashedData(null);
-      // setUsername("");
-      // setSecret("");
       setShowSuccess(false);
     } else {
       fetchUserRecords();
@@ -72,8 +66,6 @@ export default function HeroSection() {
     setIsSubmitting(true);
 
     try {
-      // const secretField = await stringToField(secret.trim());
-      // const usernameField = await stringToField(username.trim().toLowerCase());
 
       const functionName = mode === "register" ? "register" : "verify_login";
       let tx;
@@ -88,27 +80,42 @@ export default function HeroSection() {
       } else {
         // 1️⃣ Fetch records
         const records = await requestRecords(programName, true);
-        console.log("records", records);
 
+        // Filter for unspent records of the correct type
         const activeRecords = records.filter(
-          (r) => !r.spent && r.recordName === "UserSecret",
+          (r) =>
+            !r.spent &&
+            (r.recordName === "UserSecret" ||
+              r.recordPlaintext.includes("identity_hash")),
         );
 
         if (activeRecords.length === 0) {
-          throw new Error("No UserSecret record found");
+          throw new Error("No UserSecret record found. Please register first.");
         }
 
         const userRecord = activeRecords[0];
 
-        console.log("Using record for login:", userRecord.recordPlaintext);
+        // 2️⃣ Extract identity_hash from the recordPlaintext
+        // recordPlaintext usually looks like: "{ owner: ..., identity_hash: 123field, ... }"
+        // We need to extract just the "123field" part.
 
-        // 2️⃣ Execute verify_login with correct types
+        const plaintext = userRecord.recordPlaintext;
+        const match = plaintext.match(/identity_hash:\s*([\d\w]+field)/);
+
+        if (!match) {
+          throw new Error("Could not parse identity_hash from record");
+        }
+
+        const identityHash = match[1]; // This will be "508059...0055field"
+        console.log("Extracted Identity Hash for login:", identityHash);
+
+        // 3️⃣ Execute verify_login with ONLY the hash
         tx = await executeTransaction({
           program: programName,
           function: "verify_login",
-          inputs: [userRecord.recordPlaintext],
-          // fee: 100000,
-          privateFee: true,
+          inputs: [identityHash], // Pass just the field, not the whole record
+          fee: 100000, // Ensure fee is sufficient for private execution
+          privateFee: false, // Set to true only if using private credits
         });
       }
 
