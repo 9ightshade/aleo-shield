@@ -9,12 +9,14 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { useState } from "react";
-
+import { ALEO_CONFIG } from "../../../config/aleo";
 const NETWORKS = ["Aleo Mainnet", "Aleo Testnet"];
-const MOCK_ADDRESS =
-  "aleo1qnr4dkkvkgfqph0vzc3y6z4cspymuqkw9g3k5j8j7kzr9v0g3yqsn4dfed";
+
+import { useWallet } from "@provablehq/aleo-wallet-adaptor-react";
 
 export default function DepositModal({ open, onClose, balance }) {
+  const { executeTransaction, connected, address, transactionStatus } =
+    useWallet();
   const [network, setNetwork] = useState(NETWORKS[0]);
   const [amount, setAmount] = useState("");
   const [copied, setCopied] = useState(false);
@@ -24,25 +26,112 @@ export default function DepositModal({ open, onClose, balance }) {
   if (!open) return null;
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(MOCK_ADDRESS);
+    navigator.clipboard.writeText(address);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleConfirm = async () => {
-    if (!amount || isNaN(amount) || parseFloat(amount) <= 0) return;
-    setConfirming(true);
-    await new Promise((r) => setTimeout(r, 1200));
-    setConfirming(false);
-    setDone(true);
-    setTimeout(() => {
-      setDone(false);
-      setAmount("");
-      onClose();
-    }, 1500);
+  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  const pollTransactionUntilFinal = async (txId, options = {}) => {
+    const {
+      interval = 4000,
+      timeout = 180000, // increase to 3 minutes for safety
+    } = options;
+
+    const start = Date.now();
+
+    while (true) {
+      if (Date.now() - start > timeout) {
+        throw new Error("Transaction polling timed out.");
+      }
+
+      try {
+        const status = await transactionStatus(txId);
+
+        console.log("Current status:", status.status);
+
+        if (status.status === "Accepted") {
+          return { finalStatus: "Accepted", data: status };
+        }
+
+        if (status.status === "Rejected") {
+          return { finalStatus: "Rejected", data: status };
+        }
+
+        // If status exists but not final, continue polling
+      } catch (err) {
+        const message = err?.message || "";
+
+        // 👇 THIS IS THE IMPORTANT FIX
+        if (message.includes("Transaction not found")) {
+          console.log("Transaction not indexed yet. Waiting...");
+        } else {
+          console.warn("Unexpected polling error:", err);
+        }
+      }
+
+      await sleep(interval);
+    }
   };
 
-  const quickAmounts = [50, 100, 250, 500];
+  const handleConfirm = async () => {
+    if (!connected) {
+      alert("Please connect your Aleo wallet first.");
+      return;
+    }
+
+    if (!amount || isNaN(amount) || Number(amount) <= 0) return;
+
+    try {
+      setConfirming(true);
+
+      const programId =
+        network === "Aleo Mainnet"
+          ? ALEO_CONFIG.PROGRAM_ID_MAINNET
+          : ALEO_CONFIG.PROGRAM_ID_TESTNET;
+
+      const parsedAmount = BigInt(
+        Math.floor(Number(amount) * 10 ** ALEO_CONFIG.TOKEN_DECIMALS),
+      );
+
+      const inputValue = `${parsedAmount}u128`;
+
+      const tx = await executeTransaction({
+        program: programId, // ⚠️ remove array unless SDK strictly requires it
+        function: "deposit",
+        inputs: [inputValue],
+        fee: ALEO_CONFIG.DEPOSIT_FEE,
+        privateFee: false,
+      });
+
+      console.log("Transaction submitted:", tx.transactionId);
+
+      // 🔁 Poll until Accepted or Rejected
+      const result = await pollTransactionUntilFinal(tx.transactionId);
+
+      if (result.finalStatus === "Accepted") {
+        console.log("Transaction accepted ✅");
+        setDone(true);
+
+        setTimeout(() => {
+          setDone(false);
+          setAmount("");
+          onClose();
+        }, 1500);
+      } else {
+        console.error("Transaction rejected ❌");
+        alert("Transaction was rejected.");
+      }
+    } catch (error) {
+      console.error("Deposit failed:", error);
+      alert(error.message || "Transaction failed.");
+    } finally {
+      setConfirming(false);
+    }
+  };
+
+  const quickAmounts = [500, 1000, 2500, 5000];
 
   return (
     <div
@@ -124,7 +213,7 @@ export default function DepositModal({ open, onClose, balance }) {
             </label>
             <div className="flex items-center gap-2 p-3 rounded-xl bg-[var(--color-surface-2)] border border-[var(--color-border)] hover:border-green-500/20 transition-all duration-300">
               <p className="flex-1 font-mono text-[11px] text-[var(--color-text-secondary)] break-all leading-relaxed">
-                {MOCK_ADDRESS}
+                {address}
               </p>
               <button
                 onClick={handleCopy}
@@ -156,9 +245,9 @@ export default function DepositModal({ open, onClose, balance }) {
                   ? "border-green-500/40 ring-2 ring-green-500/10"
                   : "border-[var(--color-border)] focus-within:border-green-500/40 focus-within:ring-2 focus-within:ring-green-500/10"
               }`}>
-              <span className="text-sm font-bold text-[var(--color-text-secondary)]">
+              {/* <span className="text-sm font-bold text-[var(--color-text-secondary)]">
                 ₦
-              </span>
+              </span> */}
               <input
                 type="number"
                 min="0"
@@ -167,7 +256,7 @@ export default function DepositModal({ open, onClose, balance }) {
                 placeholder="0.00"
                 className="flex-1 bg-transparent text-sm font-semibold text-[var(--color-text-primary)] placeholder-[var(--color-text-secondary)]/30 focus:outline-none tabular-nums"
               />
-              <span className="text-xs font-bold text-green-400">USDCx</span>
+              {/* <span className="text-xs font-bold text-green-400">USDCx</span> */}
             </div>
 
             {/* Quick amounts */}
