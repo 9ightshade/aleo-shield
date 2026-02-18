@@ -1,7 +1,7 @@
 import { WalletMultiButton } from "@provablehq/aleo-wallet-adaptor-react-ui";
 import { useWallet } from "@provablehq/aleo-wallet-adaptor-react";
 import { useState, useEffect } from "react";
-import { stringToField } from "../../../lib/stringToField";
+// import { stringToField } from "../../../lib/stringToField";
 import { useNavigate } from "react-router-dom";
 
 export default function HeroSection() {
@@ -13,7 +13,8 @@ export default function HeroSection() {
     transactionStatus,
   } = useWallet();
   const [mode, setMode] = useState("verify_login");
-  const [username, setUsername] = useState("");
+  const programName = "shadowsphere_social6.aleo";
+  // const [username, setUsername] = useState("");
   // const [secret, setSecret] = useState("");
   const [hashedData, setHashedData] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -34,7 +35,7 @@ export default function HeroSection() {
       setIsFetchingRecords(!isFetchingRecords);
       // 2. The Async Call
       // requestRecords is provided by the useWallet() hook
-      const records = await requestRecords("shadowsphere_social4.aleo");
+      const records = await requestRecords(programName);
 
       console.log("Records:", records);
 
@@ -52,7 +53,7 @@ export default function HeroSection() {
   useEffect(() => {
     if (!connected && !address) {
       setHashedData(null);
-      setUsername("");
+      // setUsername("");
       // setSecret("");
       setShowSuccess(false);
     } else {
@@ -72,21 +73,22 @@ export default function HeroSection() {
 
     try {
       // const secretField = await stringToField(secret.trim());
-      const usernameField = await stringToField(username.trim().toLowerCase());
+      // const usernameField = await stringToField(username.trim().toLowerCase());
 
       const functionName = mode === "register" ? "register" : "verify_login";
       let tx;
       if (functionName === "register") {
         tx = await executeTransaction({
-          program: "shadowsphere_social4.aleo",
+          program: programName,
           function: functionName,
-          inputs: [ usernameField],
+          inputs: [],
           fee: 100000,
           privateFee: false,
         });
       } else {
         // 1️⃣ Fetch records
-        const records = await requestRecords("shadowsphere_social4.aleo");
+        const records = await requestRecords(programName, true);
+        console.log("records", records);
 
         const activeRecords = records.filter(
           (r) => !r.spent && r.recordName === "UserSecret",
@@ -98,18 +100,15 @@ export default function HeroSection() {
 
         const userRecord = activeRecords[0];
 
-        console.log("Using record for login:", userRecord);
+        console.log("Using record for login:", userRecord.recordPlaintext);
 
-        // 2️⃣ Execute verify_login with correct types  
+        // 2️⃣ Execute verify_login with correct types
         tx = await executeTransaction({
-          program: "shadowsphere_social4.aleo",
+          program: programName,
           function: "verify_login",
-          inputs: [
-            address, 
-            userRecord, 
-          ],
-          fee: 100000,
-          privateFee: false,
+          inputs: [userRecord.recordPlaintext],
+          // fee: 100000,
+          privateFee: true,
         });
       }
 
@@ -234,8 +233,8 @@ export default function HeroSection() {
                 </div>
 
                 {/* Form */}
-                <form onSubmit={handleSubmit} className="space-y-5 text-left">
-                  <div className="group">
+                <form className="space-y-5 text-left">
+                  {/* <div className="group">
                     <label className="block text-sm mb-2 font-medium text-gray-300 transition-colors group-focus-within:text-indigo-400">
                       Username
                     </label>
@@ -247,7 +246,7 @@ export default function HeroSection() {
                       className="w-full px-4 py-3 rounded-xl bg-gray-900/50 border border-gray-700/50 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hover:border-gray-600"
                       placeholder="Enter your username"
                     />
-                  </div>
+                  </div> */}
 
                   {/* <div className="group">
                     <label className="block text-sm mb-2 font-medium text-gray-300 transition-colors group-focus-within:text-indigo-400">
@@ -274,6 +273,7 @@ export default function HeroSection() {
 
                   <button
                     type="submit"
+                    onClick={handleSubmit}
                     disabled={isSubmitting}
                     className="w-full py-4 rounded-xl bg-linear-to-r from-indigo-600 to-purple-600 text-white font-semibold hover:from-indigo-500 hover:to-purple-500 active:scale-[0.98] transition-all duration-300 shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group">
                     <span className="absolute inset-0 w-full h-full bg-linear-to-r from-purple-600 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>

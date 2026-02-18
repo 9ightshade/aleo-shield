@@ -1,6 +1,7 @@
 import { Outlet } from "react-router-dom";
 import Sidebar from "./SideBar";
 import Topbar from "./TopBar";
+import BottomNav from "./BottomNav";
 
 export default function AppLayout() {
   return (
@@ -11,6 +12,7 @@ export default function AppLayout() {
         <main className="flex-1 overflow-y-auto p-6">
           <Outlet /> {/* This is where the specific page components render */}
         </main>
+        {/* <BottomNav /> */}
       </div>
     </div>
   );

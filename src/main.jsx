@@ -40,7 +40,7 @@ createRoot(document.getElementById("root")).render(
       <AleoWalletProvider
         wallets={wallets}
         network={network}
-        decryptPermission={DecryptPermission.UponRequest}
+        decryptPermission={DecryptPermission.OnChainHistory}
         autoConnect>
         <WalletModalProvider>
           <App />
