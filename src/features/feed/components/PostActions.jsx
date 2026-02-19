@@ -4,7 +4,7 @@ import { useState } from "react";
 import GiftModal from "./GiftModal";
 import { useWallet } from "@provablehq/aleo-wallet-adaptor-react";
 import { usePostStore } from "../../../store/usePostStore";
-
+import CommentModal from "./CommentModal";
 export default function PostActions({
   postId,
   likes,
@@ -17,6 +17,7 @@ export default function PostActions({
   const [giftOpen, setGiftOpen] = useState(false);
   const { executeTransaction, transactionStatus } = useWallet();
   const incrementLikes = usePostStore((state) => state.incrementLikes);
+  const [commentOpen, setCommentOpen] = useState(false);
   const handleLike = async () => {
     if (liked || loading) return;
 
@@ -39,7 +40,7 @@ export default function PostActions({
       console.log("TX Submitted:", txId);
 
       let attempts = 0;
-      const maxAttempts = 20; 
+      const maxAttempts = 20;
 
       while (attempts < maxAttempts) {
         await new Promise((resolve) => setTimeout(resolve, 3000));
@@ -51,7 +52,7 @@ export default function PostActions({
           console.log("Like confirmed on-chain ✅");
 
           setLiked(true);
-          incrementLikes(postId); 
+          incrementLikes(postId);
           return;
         }
 
@@ -71,30 +72,39 @@ export default function PostActions({
   };
 
   return (
-    <div className="flex items-center gap-6 text-[var(--color-text-secondary)] text-sm pt-3">
-      <button
-        onClick={handleLike}
-        className={`flex items-center gap-2 transition transform ${
-          liked ? "text-[var(--color-primary)] scale-110" : ""
-        }`}>
-        <Heart size={16} fill={liked ? "currentColor" : "none"} />
-        {count}
-      </button>
+    <div>
+      <div className="flex items-center gap-6 text-[var(--color-text-secondary)] text-sm pt-3">
+        <button
+          onClick={handleLike}
+          className={`flex items-center gap-2 transition transform ${
+            liked ? "text-[var(--color-primary)] scale-110" : ""
+          }`}>
+          <Heart size={16} fill={liked ? "currentColor" : "none"} />
+          {count}
+        </button>
 
-      <button className="flex items-center gap-2 hover:text-[var(--color-primary)] transition">
-        <MessageCircle size={16} />
-        {comments}
-      </button>
-      <button
-        onClick={() => setGiftOpen(true)}
-        className="flex items-center gap-2 hover:text-[var(--color-primary)] transition">
-        <Gift size={16} />
-        Gift
-      </button>
-
+        <button
+          onClick={() => setCommentOpen(true)}
+          className="flex items-center gap-2 hover:text-[var(--color-primary)] transition">
+          <MessageCircle size={16} />
+          {comments}
+        </button>
+        <button
+          onClick={() => setGiftOpen(true)}
+          className="flex items-center gap-2 hover:text-[var(--color-primary)] transition">
+          <Gift size={16} />
+          Gift
+        </button>
+      </div>
       <GiftModal
         open={giftOpen}
         onClose={() => setGiftOpen(false)}
+        recipientAlias={recipientAlias}
+      />
+      <CommentModal
+        open={commentOpen}
+        onClose={() => setCommentOpen(false)}
+        postId={postId}
         recipientAlias={recipientAlias}
       />
     </div>
