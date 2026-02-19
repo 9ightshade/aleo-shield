@@ -5,11 +5,7 @@ import Card from "../../../components/ui/Card";
 import { X, Lock, Unlock, Shield, Hash, Send, ChevronDown } from "lucide-react";
 import CategorySelect from "./CategorySelect";
 import { useWallet } from "@provablehq/aleo-wallet-adaptor-react";
-import {
-  parseAleoStruct,
-  fieldToString,
-  stringToField,
-} from "../../../lib/aleo/index";
+import { stringToField, fetchPost } from "../../../lib/aleo/index";
 
 // const categories = [
 //   "Whistleblowing",
@@ -89,6 +85,11 @@ export default function CreatePostModal({ open, onClose }) {
 
         if (status.status === "Accepted") {
           console.log("✅ Post accepted:", status);
+          console.log("transaction id", status.transactionId);
+
+          const postData = await fetchPost(status.transactionId);
+
+          console.log("🎯 On-chain Post Data:", postData);
           break;
         }
 

@@ -12,36 +12,9 @@ import {
 import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { useWallet } from "@provablehq/aleo-wallet-adaptor-react";
-
-const mockPosts = [
-  {
-    id: "1",
-    alias: "shadow_alpha",
-    reputation: 132,
-    verified: true,
-    category: "Whistleblowing",
-    content: "Zero-knowledge systems will redefine trust.",
-    encrypted: false,
-    likes: 12,
-    comments: 4,
-    timestamp: "2h ago",
-  },
-  {
-    id: "2",
-    alias: "anon_beta",
-    reputation: 42,
-    verified: false,
-    category: "Private Communities",
-    content: "This post is encrypted.",
-    encrypted: true,
-    likes: 3,
-    comments: 1,
-    timestamp: "5h ago",
-  },
-];
+import { usePostStore } from "../../store/usePostStore";
 
 const CATEGORIES = ["All", "Whistleblowing", "Finance", "Private Communities"];
-
 const SORT_OPTIONS = [
   { label: "Latest", icon: TrendingUp },
   { label: "Hot", icon: Flame },
@@ -52,21 +25,95 @@ export default function FeedPage() {
   const [filter, setFilter] = useState(null);
   const [sort, setSort] = useState("Latest");
   const [mounted, setMounted] = useState(false);
+  const [maxPostId, setMaxPostId] = useState(1);
 
   const { connected, address } = useWallet();
   const { ref, inView } = useInView();
 
+  // ✅ Zustand store
+  const posts = usePostStore((state) => state.posts);
+  const addPost = usePostStore((state) => state.addPost);
+
+  const PROGRAM_ID = "shadowsphere_social9.aleo";
+
+  const mapCategory = (cat) => {
+    switch (Number(cat)) {
+      case 1:
+        return "Whistleblowing";
+      case 2:
+        return "Finance";
+      case 3:
+        return "Private Communities";
+      default:
+        return "All";
+    }
+  };
+
+  const fetchPostsBatch = async (batchSize = 10) => {
+    let fetchedCount = 0;
+
+    for (let i = 0; i < batchSize; i++) {
+      const postId = maxPostId + i;
+
+      const endpoint = `https://testnet.aleoscan.io/testnet/program/${PROGRAM_ID}/mapping/posts/${postId}u32`;
+
+      try {
+        const res = await fetch(endpoint);
+        if (!res.ok) throw new Error("Not found");
+
+        const data = await res.json();
+        const formattedPost = {
+          id: String(data.post_id ?? postId),
+          alias:
+            "aleo..." +
+            String(data.author ?? "anon")
+              .toString()
+              .slice(-6),
+          reputation: Math.floor(Math.random() * 200),
+          verified: true,
+          category: mapCategory(data.category),
+          content: `Encrypted: ${data.encrypted}, Hash: ${data.content_hash}`,
+          encrypted: Boolean(data.encrypted),
+          likes: Number(data.likes ?? 0),
+          comments: Number(data.comments ?? 0),
+          timestamp: `${Number(data.timestamp ?? 0)} blocks ago`,
+        };
+
+        addPost(formattedPost);
+
+        console.log("Stored post:", formattedPost);
+
+        fetchedCount++;
+      } catch (err) {
+        console.warn(`Skipping post ${postId}`);
+      }
+    }
+
+    // Move pointer forward only by successful fetches
+    if (fetchedCount > 0) {
+      setMaxPostId((prev) => prev + fetchedCount);
+    }
+  };
+
+  // Initial fetch
   useEffect(() => {
-    setMounted(true);
+    fetchPostsBatch(10);
   }, []);
 
+  // Infinite scroll trigger
   useEffect(() => {
-    console.log("is connected with address", connected, address);
-    inView ? console.log("in view") : console.log("not in view");
-  }, [ref, inView]);
+    if (inView) {
+      fetchPostsBatch(5);
+    }
+  }, [inView]);
 
-  const filtered = mockPosts.filter((p) => !filter || p.category === filter);
+  const filtered = posts.filter((p) => !filter || p.category === filter);
 
+  useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    console.log("Connected:", connected, address);
+  }, [connected, address]);
   return (
     <div className="relative flex flex-col gap-6 feed-root">
       {/* ── Toolbar ──────────────────────────────────── */}
