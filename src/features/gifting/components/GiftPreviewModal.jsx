@@ -84,7 +84,7 @@ export default function GiftPreviewModal({ gift, recipient, onClose }) {
             </p>
             <div className="px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-500/20">
               <span className="text-sm font-bold text-indigo-300">
-                ₦{gift.price.toLocaleString()}
+                {gift.price.toLocaleString()}
               </span>
             </div>
           </div>

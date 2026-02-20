@@ -17,6 +17,7 @@ export default function PostActions({
   const [giftOpen, setGiftOpen] = useState(false);
   const { executeTransaction, transactionStatus } = useWallet();
   const incrementLikes = usePostStore((state) => state.incrementLikes);
+  
   const [commentOpen, setCommentOpen] = useState(false);
   const handleLike = async () => {
     if (liked || loading) return;
@@ -80,7 +81,7 @@ export default function PostActions({
             liked ? "text-[var(--color-primary)] scale-110" : ""
           }`}>
           <Heart size={16} fill={liked ? "currentColor" : "none"} />
-          {count}
+          {/* {count} */}
         </button>
 
         <button

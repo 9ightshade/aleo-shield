@@ -48,7 +48,7 @@ export default function GiftCard({ gift, onSelect, isSelected }) {
           ? "bg-indigo-500/20 text-indigo-300"
           : "bg-[var(--color-muted)] text-[var(--color-text-secondary)] group-hover:bg-indigo-500/15 group-hover:text-indigo-400"
       }`}>
-        ₦{gift.price.toLocaleString()}
+        {gift.price.toLocaleString()}
       </div>
     </button>
   );

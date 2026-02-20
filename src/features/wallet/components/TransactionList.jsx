@@ -2,10 +2,42 @@
 // ─── TransactionList.jsx ──────────────────────────────────────────────────────
 import { Clock, Shield } from "lucide-react";
 import TransactionItem from "./TransactionItem";
+import { useWallet } from "@provablehq/aleo-wallet-adaptor-react";
+import { useEffect, useState } from "react";
 
-export default function TransactionList({ transactions }) {
-  const pending = transactions.filter((t) => t.status === "pending");
-  const completed = transactions.filter((t) => t.status !== "pending");
+export default function TransactionList() {
+  const { connected, connect, requestTransactionHistory } = useWallet();
+
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    async function getHistory() {
+      try {
+        setLoading(true);
+
+        if (!connected) {
+          await connect();
+        }
+
+        const history = await requestTransactionHistory("credits.aleo");
+        // console.log("history:", history);
+
+        // console.log("Transactions:", history?.transactions);
+
+        setTransactions(history?.transactions || []);
+      } catch (err) {
+        console.error("Failed to fetch history:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    getHistory();
+  }, [connected]);
+
+  // const pending = transactions.filter((t) => t.status === "pending");
+  // const completed = transactions.filter((t) => t.status !== "pending");
 
   return (
     <div className="relative rounded-2xl bg-[var(--color-surface-2)] border border-[var(--color-border)] overflow-hidden hover:border-indigo-500/15 transition-all duration-300">
@@ -31,7 +63,7 @@ export default function TransactionList({ transactions }) {
       </div>
 
       {/* Pending banner */}
-      {pending.length > 0 && (
+      {/* {pending.length > 0 && (
         <div className="px-6 py-3 bg-amber-500/8 border-b border-amber-500/15 flex items-center gap-2">
           <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
           <span className="text-xs text-amber-400 font-medium">
@@ -39,7 +71,7 @@ export default function TransactionList({ transactions }) {
             processing…
           </span>
         </div>
-      )}
+      )} */}
 
       {/* List */}
       <div className="divide-y divide-[var(--color-border)]">
@@ -55,7 +87,7 @@ export default function TransactionList({ transactions }) {
         ) : (
           transactions.map((tx, i) => (
             <div
-              key={tx.id}
+              key={tx.transactionId}
               className="tx-item"
               style={{ animationDelay: `${i * 50}ms` }}>
               <TransactionItem transaction={tx} />

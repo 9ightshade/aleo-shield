@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 // ─── GiftingPage.jsx ──────────────────────────────────────────────────────────
 import { useState } from "react";
 import { giftCatalog } from "./gifts";
@@ -33,12 +34,12 @@ export default function GiftingPage() {
       </div>
 
       {/* ── Recipient ─────────────────────────────── */}
-      <div className="gifting-recipient">
+      {/* <div className="gifting-recipient">
         <GiftRecipientSelector
           recipient={recipient}
           setRecipient={setRecipient}
         />
-      </div>
+      </div> */}
 
       {/* ── Gift grid ─────────────────────────────── */}
       <div className="gifting-grid">

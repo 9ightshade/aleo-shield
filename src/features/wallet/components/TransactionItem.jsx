@@ -89,7 +89,7 @@ export default function TransactionItem({ transaction }) {
         <span
           className={`text-sm font-bold tabular-nums ${meta.positive ? "text-green-400" : "text-[var(--color-text-primary)]"}`}>
           {meta.positive ? "+" : "−"}
-          {transaction.amount.toLocaleString("en-US", {
+          {transaction.amount?.toLocaleString("en-US", {
             minimumFractionDigits: 2,
           })}{" "}
           USDCx

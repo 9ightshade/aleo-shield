@@ -13,7 +13,7 @@ import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { useWallet } from "@provablehq/aleo-wallet-adaptor-react";
 import { usePostStore } from "../../store/usePostStore";
-import { fieldToString } from "../../lib/aleo/index";
+import { fieldToString, parseAleoPost } from "../../lib/aleo/index";
 
 const CATEGORIES = ["All", "Whistleblowing", "Finance", "Private Communities"];
 const SORT_OPTIONS = [
@@ -50,7 +50,7 @@ export default function FeedPage() {
     }
   };
 
-  const fetchPostsBatch = async (batchSize = 10) => {
+  const fetchPostsBatch = async (batchSize = 5) => {
     let fetchedCount = 0;
 
     for (let i = 0; i < batchSize; i++) {
@@ -64,24 +64,15 @@ export default function FeedPage() {
 
         const data = await res.json();
 
-        console.log("formatted post", data);
+        console.log("res post", data);
 
-        const formattedPost = {
-          id: String(data.post_id ?? postId),
-          alias: String(data.author).toString().slice(-6),
-          reputation: Math.floor(Math.random() * 200),
-          verified: true,
-          category: mapCategory(data.category),
-          content: data.content_hash
-            ? fieldToString(data.content_hash)
-            : `No content `,
+        const formattedPost = parseAleoPost(data);
 
-          encrypted: Boolean(data.encrypted),
-          likes: Number(data.likes ?? 0),
-          comments: Number(data.comments ?? 0),
-          timestamp: `${Number(data.timestamp ?? 0)} blocks ago`,
-        };
-
+      if (formattedPost) {
+        addOrUpdatePost(formattedPost);
+        console.log("Stored post:", formattedPost);
+        fetchedCount++;
+      }
         addOrUpdatePost(formattedPost);
 
         console.log("Stored post:", formattedPost);
@@ -100,7 +91,7 @@ export default function FeedPage() {
 
   // Initial fetch
   useEffect(() => {
-    fetchPostsBatch(10);
+    fetchPostsBatch(5);
   }, []);
 
   // Infinite scroll trigger

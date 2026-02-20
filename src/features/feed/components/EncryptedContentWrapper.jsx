@@ -3,7 +3,7 @@ import Button from "../../../components/ui/Button";
 
 export default function EncryptedContentWrapper({ content, encrypted }) {
   const [revealed, setRevealed] = useState(false);
-  console.log("encrypted content", content);
+  // console.log("encrypted content", content);
 
   if (!encrypted) {
     return <p className="text-sm leading-relaxed">{content}</p>;
