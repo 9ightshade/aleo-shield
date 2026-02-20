@@ -5,6 +5,7 @@ import { useWalletStore } from "../../../store/useWalletStore";
 import { v4 as uuid } from "uuid";
 import { X, Send, AlertTriangle, Lock, Sparkles } from "lucide-react";
 import { useWallet } from "@provablehq/aleo-wallet-adaptor-react";
+import {ALEO_PROGRAM_NAME} from "../../../config/config"
 
 export default function GiftPreviewModal({ gift, recipient, onClose }) {
   const { balance, addTransaction } = useWalletStore();
@@ -35,7 +36,7 @@ export default function GiftPreviewModal({ gift, recipient, onClose }) {
 
       // 2. Construct the Payload
       const txPayload = {
-        program: "shadowsphere_social9.aleo",
+        program: ALEO_PROGRAM_NAME,
         function: "send_gift",
         inputs: [
           recipientAddress, 
@@ -60,7 +61,7 @@ export default function GiftPreviewModal({ gift, recipient, onClose }) {
       // console.log(`💎 Gift: ${gift.price} USDCx -> Raw: ${amountInput}`);
 
       const result = await executeTransaction({
-        program: "shadowsphere_social9.aleo",
+        program: ALEO_PROGRAM_NAME,
         function: "send_gift",
         inputs: [recipientAddress, amountInput, "0field", giftIdInput],
         fee: 100_000,

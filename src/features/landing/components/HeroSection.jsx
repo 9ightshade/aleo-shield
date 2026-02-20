@@ -2,6 +2,7 @@ import { WalletMultiButton } from "@provablehq/aleo-wallet-adaptor-react-ui";
 import { useWallet } from "@provablehq/aleo-wallet-adaptor-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { ALEO_PROGRAM_NAME } from "../../../config/config";
 
 export default function HeroSection() {
   const {
@@ -12,7 +13,6 @@ export default function HeroSection() {
     transactionStatus,
   } = useWallet();
   const [mode, setMode] = useState("verify_login");
-  const programName = "shadowsphere_social9.aleo";
   const [hashedData, setHashedData] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -31,7 +31,7 @@ export default function HeroSection() {
       setIsFetchingRecords(!isFetchingRecords);
       // 2. The Async Call
       // requestRecords is provided by the useWallet() hook
-      const records = await requestRecords(programName);
+      const records = await requestRecords(ALEO_PROGRAM_NAME);
 
       console.log("Records:", records);
 
@@ -71,7 +71,7 @@ export default function HeroSection() {
       let tx;
       if (functionName === "register") {
         tx = await executeTransaction({
-          program: programName,
+          program: ALEO_PROGRAM_NAME,
           function: functionName,
           inputs: [],
           fee: 100000,
@@ -79,7 +79,7 @@ export default function HeroSection() {
         });
       } else {
         // 1️⃣ Fetch records
-        const records = await requestRecords(programName, true);
+        const records = await requestRecords(ALEO_PROGRAM_NAME, true);
 
         // Filter for unspent records of the correct type
         const activeRecords = records.filter(
@@ -111,7 +111,7 @@ export default function HeroSection() {
 
         // 3️⃣ Execute verify_login with ONLY the hash
         tx = await executeTransaction({
-          program: programName,
+          program: ALEO_PROGRAM_NAME,
           function: "verify_login",
           inputs: [identityHash], // Pass just the field, not the whole record
           fee: 100000, // Ensure fee is sufficient for private execution
