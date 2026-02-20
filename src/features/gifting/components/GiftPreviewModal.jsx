@@ -123,7 +123,11 @@ export default function GiftPreviewModal({ gift, recipient, onClose }) {
       const DECIMALS = 1_000_000;
       const rawAmount = Math.floor(gift.price * DECIMALS);
       const amountInput = `${rawAmount}u128`;
-      const giftIdInput = `${gift.id ?? 0}u32`;
+
+      // 2. Conversion Logic for Timestamp ID (r3)
+      // Date.now() is ms, divide by 1000 to get seconds for u32 compatibility
+      const unixTimestamp = Math.floor(Date.now() / 1000);
+      const giftIdInput = `${unixTimestamp}u32`;
 
       // 2. Construct the Payload
       const txPayload = {
@@ -142,19 +146,19 @@ export default function GiftPreviewModal({ gift, recipient, onClose }) {
       // 3. LOG THE PAYLOAD
       console.log("📦 EXECUTE TRANSACTION PAYLOAD:");
       console.table({
+        "r0 (Recipient)": txPayload.inputs[0],
+        "r1 (Amount)": txPayload.inputs[1],
+        "r2 (Field)": txPayload.inputs[2],
+        "r3 (Timestamp ID)": txPayload.inputs[3],
         Program: txPayload.program,
-        Function: txPayload.function,
-        Fee: `${txPayload.fee} microcredits`,
-        Address: txPayload.inputs[0],
-        Amount: txPayload.inputs[1],
-        GiftID: txPayload.inputs[3],
+        Fee: txPayload.fee,
       });
       console.log(`💎 Gift: ${gift.price} USDCx -> Raw: ${amountInput}`);
 
       const result = await executeTransaction({
         program: "shadowsphere_social9.aleo",
         function: "send_gift",
-        inputs: [recipientAddress, amountInput, "1field", giftIdInput],
+        inputs: [recipientAddress, amountInput, "0field", giftIdInput],
         fee: 100_000,
         privateFee: false,
       });
