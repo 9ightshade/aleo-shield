@@ -44,44 +44,44 @@ export default function WalletPage() {
   // console.log(wallet);
 
   useEffect(() => {
- const fetchBalance = async () => {
-   if (!connected || !address) return;
+    const fetchBalance = async () => {
+      if (!connected || !address) return;
 
-   setLoading(true);
-   try {
-     // 1. Use the direct RPC proxy or a more stable endpoint
-     // We use a POST request to the RPC which often bypasses the GET CORS restrictions
-     const rpcUrl =
-       "https://api.explorer.provable.com/v1/testnet3/program/credits.aleo/mapping/account";
+      setLoading(true);
+      try {
+        // 1. Use the direct RPC proxy or a more stable endpoint
+        // We use a POST request to the RPC which often bypasses the GET CORS restrictions
+        const rpcUrl =
+          "https://testnet.aleoscan.io/testnet/program/test_usdcx_stablecoin.aleo/mapping/balances";
 
-     const response = await fetch(`${rpcUrl}/${address}`, {
-       method: "GET",
-       headers: {
-         "Content-Type": "application/json",
-       },
-     });
+        const response = await fetch(`${rpcUrl}/${address}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
 
-     if (response.status === 404) {
-       // 404 in Aleo mappings means 0 credits (the account isn't on-chain yet)
-       setBalance(0);
-       return;
-     }
+        if (response.status === 404) {
+          // 404 in Aleo mappings means 0 credits (the account isn't on-chain yet)
+          setBalance(0);
+          return;
+        }
 
-     if (!response.ok) throw new Error("Network response was not ok");
+        if (!response.ok) throw new Error("Network response was not ok");
 
-     const rawData = await response.json();
-     // Data usually returns like "100.234u64" or just "100234u64"
-     const cleanBalance =
-       parseFloat(String(rawData).replace("u64", "")) / 1_000_000;
-     setBalance(cleanBalance);
-   } catch (error) {
-     console.error("CORS or Network Error:", error);
-     // Fallback to 0 if the account doesn't exist
-     setBalance(0);
-   } finally {
-     setLoading(false);
-   }
- };
+        const rawData = await response.json();
+        // Data usually returns like "100.234u64" or just "100234u64"
+        const cleanBalance =
+          parseFloat(String(rawData).replace("u64", "")) / 1_000_000;
+        setBalance(cleanBalance);
+      } catch (error) {
+        console.error("CORS or Network Error:", error);
+        // Fallback to 0 if the account doesn't exist
+        setBalance(0);
+      } finally {
+        setLoading(false);
+      }
+    };
 
     fetchBalance();
     // Refresh every 30 seconds

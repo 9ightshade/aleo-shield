@@ -18,101 +18,6 @@ export default function GiftPreviewModal({ gift, recipient, onClose }) {
   const insufficient = balance < gift.price;
   const noRecipient = !recipientAddress.trim();
   const canSend = !noRecipient;
-
-  // const handleConfirm = async () => {
-  //   if (!canSend || sending) return;
-
-  //   try {
-  //     setSending(true);
-
-  //     // 1. Conversion Logic: Multiply by 1,000,000 to handle 6 decimals
-  //     // If gift.price is 0.5, rawAmount becomes 500000
-  //     const DECIMALS = 1_000_000;
-  //     const rawAmount = Math.floor(gift.price * DECIMALS);
-
-  //     // 2. Format as Aleo literals
-  //     const amountInput = `${rawAmount}u128`;
-  //     const giftIdInput = `${gift.id ?? 0}u32`; // IDs are typically u32
-  //     const feeInput = 100_000; // This is already in microcredits (0.1 credits)
-
-  //     const txId = await executeTransaction({
-  //       program: "shadowsphere_social9.aleo",
-  //       function: "send_gift",
-  //       inputs: [
-  //         recipientAddress, // aleo1... address
-  //         amountInput, // "500000u128"
-  //         "0field", // placeholder field
-  //         giftIdInput, // "1u32"
-  //       ],
-  //       fee: feeInput,
-  //       privateFee: false,
-  //     });
-
-  //     console.log("🚀 Transaction Sent. ID:", txId);
-
-  //     // Add as pending immediately (Store the UI amount for display)
-  //     addTransaction({
-  //       id: txId,
-  //       type: "gift_sent",
-  //       amount: gift.price, // Keep as 0.5 for the UI display
-  //       status: "pending",
-  //       createdAt: new Date().toISOString(),
-  //     });
-
-  //     // ───── Poll for confirmation ─────
-  //     const start = Date.now();
-  //     const timeout = 60_000;
-  //     const intervalMs = 2000;
-
-  //     const poll = async () => {
-  //       try {
-  //         const status = await transactionStatus(txId.transactionId);
-
-  //         if (status === "Accepted") {
-  //           addTransaction({
-  //             id: txId,
-  //             type: "gift_sent",
-  //             amount: gift.price,
-  //             status: "completed",
-  //             createdAt: new Date().toISOString(),
-  //           });
-
-  //           setDone(true);
-  //           setTimeout(() => {
-  //             setDone(false);
-  //             onClose();
-  //           }, 1400);
-  //           return;
-  //         }
-
-  //         if (status === "Rejected") {
-  //           addTransaction({
-  //             id: txId,
-  //             type: "gift_sent",
-  //             amount: gift.price,
-  //             status: "failed",
-  //             createdAt: new Date().toISOString(),
-  //           });
-  //           return;
-  //         }
-
-  //         if (Date.now() - start < timeout) {
-  //           setTimeout(poll, intervalMs);
-  //         } else {
-  //           console.warn("Transaction polling timed out.");
-  //         }
-  //       } catch (err) {
-  //         console.error("Polling error:", err);
-  //       }
-  //     };
-
-  //     poll();
-  //   } catch (err) {
-  //     console.error("Gift failed:", err);
-  //   } finally {
-  //     setSending(false);
-  //   }
-  // };
   const handleConfirm = async () => {
     if (!canSend || sending) return;
 
@@ -124,8 +29,7 @@ export default function GiftPreviewModal({ gift, recipient, onClose }) {
       const rawAmount = Math.floor(gift.price * DECIMALS);
       const amountInput = `${rawAmount}u128`;
 
-      // 2. Conversion Logic for Timestamp ID (r3)
-      // Date.now() is ms, divide by 1000 to get seconds for u32 compatibility
+
       const unixTimestamp = Math.floor(Date.now() / 1000);
       const giftIdInput = `${unixTimestamp}u32`;
 
@@ -134,10 +38,10 @@ export default function GiftPreviewModal({ gift, recipient, onClose }) {
         program: "shadowsphere_social9.aleo",
         function: "send_gift",
         inputs: [
-          recipientAddress, // Address string
-          amountInput, // e.g., "500000u128"
-          "0field", // Placeholder
-          giftIdInput, // e.g., "1u32"
+          recipientAddress, 
+          amountInput, 
+          "0field", 
+          giftIdInput, 
         ],
         fee: 100_000,
         privateFee: false,
@@ -153,7 +57,7 @@ export default function GiftPreviewModal({ gift, recipient, onClose }) {
         Program: txPayload.program,
         Fee: txPayload.fee,
       });
-      console.log(`💎 Gift: ${gift.price} USDCx -> Raw: ${amountInput}`);
+      // console.log(`💎 Gift: ${gift.price} USDCx -> Raw: ${amountInput}`);
 
       const result = await executeTransaction({
         program: "shadowsphere_social9.aleo",
