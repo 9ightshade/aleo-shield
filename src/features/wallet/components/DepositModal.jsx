@@ -10,13 +10,15 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { ALEO_CONFIG } from "../../../config/aleo";
+import { ALEO_FEE, ALEO_PROGRAM_NAME } from "../../../config/config";
 const NETWORKS = ["Aleo Mainnet", "Aleo Testnet"];
 
 import { useWallet } from "@provablehq/aleo-wallet-adaptor-react";
-
+import { useAleoBalance } from "../../../hooks/useUsdxBalance";
 export default function DepositModal({ open, onClose, balance }) {
   const { executeTransaction, connected, address, transactionStatus } =
     useWallet();
+  const { refresh } = useAleoBalance();
   const [network, setNetwork] = useState(NETWORKS[0]);
   const [amount, setAmount] = useState("");
   const [copied, setCopied] = useState(false);
@@ -34,10 +36,7 @@ export default function DepositModal({ open, onClose, balance }) {
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
   const pollTransactionUntilFinal = async (txId, options = {}) => {
-    const {
-      interval = 4000,
-      timeout = 180000, // increase to 3 minutes for safety
-    } = options;
+    const { interval = 4000, timeout = 180000 } = options;
 
     const start = Date.now();
 
@@ -52,10 +51,12 @@ export default function DepositModal({ open, onClose, balance }) {
         console.log("Current status:", status.status);
 
         if (status.status === "Accepted") {
+          refresh();
           return { finalStatus: "Accepted", data: status };
         }
 
         if (status.status === "Rejected") {
+          refresh();
           return { finalStatus: "Rejected", data: status };
         }
 
@@ -74,7 +75,6 @@ export default function DepositModal({ open, onClose, balance }) {
       await sleep(interval);
     }
   };
-
 
   const MIN_DEPOSIT = 1000000n; // 1000000u128
 
@@ -104,10 +104,10 @@ export default function DepositModal({ open, onClose, balance }) {
       const inputValue = `${parsedAmount}u128`;
 
       const tx = await executeTransaction({
-        program: "shadowsphere_social11.aleo",
+        program: ALEO_PROGRAM_NAME,
         function: "deposit",
         inputs: [inputValue],
-        fee: 100000,
+        fee: ALEO_FEE,
         privateFee: false,
       });
 

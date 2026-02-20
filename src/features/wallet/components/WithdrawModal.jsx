@@ -9,14 +9,15 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useWallet } from "@provablehq/aleo-wallet-adaptor-react";
-import {ALEO_PROGRAM_NAME, ALEO_FEE} from "../../../config/config"
+import { ALEO_PROGRAM_NAME, ALEO_FEE } from "../../../config/config";
+import { useAleoBalance } from "../../../hooks/useUsdxBalance";
 
 const NETWORKS = ["Aleo Mainnet", "Aleo Testnet"];
 
 export default function WithdrawModal({ open, onClose, balance }) {
   // const [network, setNetwork] = useState(NETWORKS[0]);
   const { executeTransaction, connected, transactionStatus } = useWallet();
-
+  const { refresh } = useAleoBalance();
   const [amount, setAmount] = useState("");
   // const [address, setAddress] = useState("");
   const [confirming, setConfirming] = useState(false);
@@ -42,11 +43,13 @@ export default function WithdrawModal({ open, onClose, balance }) {
         console.log("📡 Current withdrawal status:", status);
 
         if (status.status === "Accepted") {
+          refresh();
           console.log("✅ Withdrawal Accepted:", status);
           return { finalStatus: "Accepted", data: status };
         }
 
         if (status.status === "Rejected") {
+          refresh();
           console.log("❌ Withdrawal Rejected:", status);
           return { finalStatus: "Rejected", data: status };
         }
@@ -269,7 +272,6 @@ export default function WithdrawModal({ open, onClose, balance }) {
               </p>
             )}
           </div>
-
 
           {/* Fee summary */}
           {parsedAmount > 0 && (

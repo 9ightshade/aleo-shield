@@ -1,47 +1,46 @@
-    import { create } from "zustand";
+// src/store/useWalletStore.ts
+import { create } from "zustand";
+import { DECIMAL_MULTIPLIER } from "../config/config";
 
-    export type TransactionType = "deposit" | "withdraw" | "gift";
+// 1. Define the shape of your store
+interface WalletState {
+  balance: number;
+  isLoading: boolean;
+  lastUpdated: number | null;
+  fetchBalance: (address: string | null, connected: boolean) => Promise<void>;
+}
 
-    export interface Transaction {
-      id: string;
-      type: TransactionType;
-      amount: number;
-      status: "pending" | "completed" | "failed";
-      createdAt: string;
+// 2. Pass the interface to create<WalletState>()
+const useWalletStore = create<WalletState>()((set) => ({
+  balance: 0,
+  isLoading: false,
+  lastUpdated: null,
+
+  fetchBalance: async (address, connected) => {
+    if (!connected || !address) return;
+
+    set({ isLoading: true });
+    try {
+      const rpcUrl =
+        "https://testnet.aleoscan.io/testnet/program/test_usdcx_stablecoin.aleo/mapping/balances";
+
+      const response = await fetch(`${rpcUrl}/${address}`);
+
+      if (response.status === 404) {
+        set({ balance: 0, isLoading: false, lastUpdated: Date.now() });
+        return;
+      }
+
+      const rawData = await response.json();
+      const cleanBalance =
+        parseFloat(String(rawData).replace("u64", "")) / DECIMAL_MULTIPLIER;
+
+      set({ balance: cleanBalance, lastUpdated: Date.now(), isLoading: false });
+    } catch (error) {
+      console.error("Wallet Store Error:", error);
+      set({ balance: 0, isLoading: false });
     }
+  },
+}));
 
-    interface WalletState {
-      balance: number;
-      transactions: Transaction[];
-      filter: "all" | TransactionType;
-
-      setBalance: (amount: number) => void;
-      addTransaction: (tx: Transaction) => void;
-      updateTransactionStatus: (
-        id: string,
-        status: Transaction["status"],
-      ) => void;
-      setFilter: (filter: WalletState["filter"]) => void;
-    }
-
-    export const useWalletStore = create<WalletState>((set) => ({
-      balance: 0,
-      transactions: [],
-      filter: "all",
-
-      setBalance: (amount) => set({ balance: amount }),
-
-      addTransaction: (tx) =>
-        set((state) => ({
-          transactions: [tx, ...state.transactions],
-        })),
-
-      updateTransactionStatus: (id, status) =>
-        set((state) => ({
-          transactions: state.transactions.map((tx) =>
-            tx.id === id ? { ...tx, status } : tx,
-          ),
-        })),
-
-      setFilter: (filter) => set({ filter }),
-    }));
+export default useWalletStore;

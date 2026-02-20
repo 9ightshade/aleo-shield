@@ -21,9 +21,9 @@ export default function TransactionList() {
         }
 
         const history = await requestTransactionHistory("credits.aleo");
-        // console.log("history:", history);
+        console.log("history:", history);
 
-        // console.log("Transactions:", history?.transactions);
+        console.log("Transactions:", history?.transactions);
 
         setTransactions(history?.transactions || []);
       } catch (err) {

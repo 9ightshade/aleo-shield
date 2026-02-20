@@ -12,9 +12,11 @@ import { useState, useEffect } from "react";
 import DepositModal from "./DepositModal";
 import WithdrawModal from "./WithdrawModal";
 import { useWallet } from "@provablehq/aleo-wallet-adaptor-react";
+import { useAleoBalance } from "../../../hooks/useUsdxBalance";
 
 export default function BalanceCard({ balance, isLoading }) {
   const [hidden, setHidden] = useState(false);
+  const { refresh } = useAleoBalance();
   const [showDeposit, setShowDeposit] = useState(false);
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [history, setHistory] = useState([]);
