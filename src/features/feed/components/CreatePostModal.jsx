@@ -7,6 +7,7 @@ import CategorySelect from "./CategorySelect";
 import { useWallet } from "@provablehq/aleo-wallet-adaptor-react";
 import { stringToField, fetchPost } from "../../../lib/aleo/index";
 import { ALEO_PROGRAM_NAME, ALEO_FEE } from "../../../config/config";
+import { usePostStore } from "../../../store/usePostStore";
 
 // const categories = [
 //   "Whistleblowing",
@@ -41,7 +42,7 @@ export default function CreatePostModal({ open, onClose }) {
   const [publishing, setPublishing] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState(null);
-
+  const { fetchPostsBatch } = usePostStore();
   if (!open) return null;
 
   const charCount = content.length;
@@ -87,8 +88,9 @@ export default function CreatePostModal({ open, onClose }) {
         if (status.status === "Accepted") {
           console.log("✅ Post accepted:", status);
           console.log("transaction id", status.transactionId);
+          await usePostStore.getState().fetchPostsBatch(1);
 
-          const postData = await fetchPost(status.transactionId);
+          const postData = await fetchPost(status.transactionId); //fetches data just to be sure its onchain
 
           console.log("🎯 On-chain Post Data:", postData);
           break;

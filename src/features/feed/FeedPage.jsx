@@ -39,9 +39,10 @@ export default function FeedPage() {
   const { connected, address, decrypt } = useWallet();
   const { ref, inView } = useInView();
 
-  // ✅ Zustand store
+  
   const posts = usePostStore((state) => state.posts);
   const addOrUpdatePost = usePostStore((state) => state.addOrUpdatePost);
+  
 
   const PROGRAM_ID = ALEO_PROGRAM_NAME;
 
@@ -57,51 +58,6 @@ export default function FeedPage() {
         return "All";
     }
   };
-
-  // let decryptPost;
-
-  // const fetchPostsBatch = async (batchSize ) => {
-  //   let fetchedCount = 0;
-
-  //   for (let i = 0; i < batchSize; i++) {
-  //     const postId = maxPostId + i;
-
-  //     const endpoint = `https://testnet.aleoscan.io/testnet/program/${PROGRAM_ID}/mapping/posts/${postId}u32`;
-
-  //     try {
-  //       const res = await fetch(endpoint);
-  //       if (!res.ok) throw new Error("Not found");
-
-  //       const data = await res.json();
-
-  //       console.log(data);
-
-  //       // decryptPost = await decrypt(data);
-
-  //       // console.log("post:", decryptPost);
-
-  //       const formattedPost = parseAleoPost(data);
-
-  //       if (formattedPost) {
-  //         addOrUpdatePost(formattedPost);
-  //         console.log("Stored post:", formattedPost);
-  //         fetchedCount++;
-  //       }
-  //       addOrUpdatePost(formattedPost);
-
-  //       console.log("Stored post:", formattedPost);
-
-  //       fetchedCount++;
-  //     } catch (err) {
-  //       console.warn(`Skipping post ${postId}`);
-  //     }
-  //   }
-
-  //   // Move pointer forward only by successful fetches
-  //   if (fetchedCount > 0) {
-  //     setMaxPostId((prev) => prev + fetchedCount);
-  //   }
-  // };
   const fetchPostsBatch = async (batchSize) => {
     const newPosts = [];
     let fetchedCount = 0;

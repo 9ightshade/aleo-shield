@@ -5,7 +5,9 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { stringToField } from "../../../lib/aleo/stringToField";
 import { usePostStore } from "../../../store/usePostStore";
+import {ALEO_PROGRAM_NAME,ALEO_FEE} from "../../../config/config"
 const MAX_COMMENT_LENGTH = 30;
+
 
 export default function CommentModal({
   open,
@@ -55,10 +57,10 @@ export default function CommentModal({
       });
 
       const result = await executeTransaction({
-        program: "shadowsphere_social9.aleo",
+        program: ALEO_PROGRAM_NAME,
         function: "add_comment",
         inputs: [formattedPostId, commentField],
-        fee: 100000,
+        fee: ALEO_FEE,
         privateFee: false,
       });
 

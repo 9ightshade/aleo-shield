@@ -14,12 +14,18 @@ export default function PostActions({
 }) {
   const [liked, setLiked] = useState(false);
   const [count, setCount] = useState(likes);
+
   const [loading, setLoading] = useState(false);
   const [giftOpen, setGiftOpen] = useState(false);
   const { executeTransaction, transactionStatus } = useWallet();
   const incrementLikes = usePostStore((state) => state.incrementLikes);
 
   const [commentOpen, setCommentOpen] = useState(false);
+  const { refreshPostById } = usePostStore();
+
+  console.log("likes", likes);
+  
+
   const handleLike = async () => {
     if (liked || loading) return;
 
@@ -52,7 +58,7 @@ export default function PostActions({
 
         if (status.status === "Accepted") {
           console.log("Like confirmed on-chain ✅");
-
+          refreshPostById(postId);
           setLiked(true);
           incrementLikes(postId);
           return;
@@ -82,7 +88,7 @@ export default function PostActions({
             liked ? "text-[var(--color-primary)] scale-110" : ""
           }`}>
           <Heart size={16} fill={liked ? "currentColor" : "none"} />
-          {/* {count} */}
+          {count}
         </button>
 
         <button
@@ -91,12 +97,12 @@ export default function PostActions({
           <MessageCircle size={16} />
           {comments}
         </button>
-        <button
+        {/* <button
           onClick={() => setGiftOpen(true)}
           className="flex items-center gap-2 hover:text-[var(--color-primary)] transition">
           <Gift size={16} />
           Gift
-        </button>
+        </button> */}
       </div>
       <GiftModal
         open={giftOpen}

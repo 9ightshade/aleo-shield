@@ -1,3 +1,4 @@
+import type { Post } from "../../store/usePostStore";
 import { fieldToString } from "../../lib/aleo/index";
 
 type AleoRaw = Record<string, any> | string | null;
@@ -10,7 +11,7 @@ const cleanAleoValue = (value: any): string =>
 const parseStructString = (raw: string): Record<string, string> => {
   return Object.fromEntries(
     raw
-      .replace(/^[{\s]+|[}\s]+$/g, "") 
+      .replace(/^[{\s]+|[}\s]+$/g, "")
       .split(",")
       .map((pair) => {
         const [key, value] = pair.split(":").map((s) => s.trim());
@@ -19,10 +20,12 @@ const parseStructString = (raw: string): Record<string, string> => {
   );
 };
 
-export function parseAleoPost(data: AleoRaw, fallbackId?: number | string) {
+export function parseAleoPost(
+  data: AleoRaw,
+  fallbackId?: number | string,
+): Post | null {
   if (!data) return null;
 
-  // 🔎 Handle serialized struct from Aleoscan
   const parsed: Record<string, any> =
     typeof data === "string" ? parseStructString(data) : data;
 
@@ -48,15 +51,15 @@ export function parseAleoPost(data: AleoRaw, fallbackId?: number | string) {
 
   return {
     id,
-    author,
+
     alias: "aleo..." + author.slice(-6),
     reputation: Math.floor(Math.random() * 200),
     verified: true,
 
     category: categoryMap[categoryRaw] ?? "All",
 
-    // ✅ content_hash now correctly extracted and converted
-    content: contentHash ? fieldToString(contentHash) : "No content",
+    // 🔒 FORCE STRING
+    content: contentHash ? String(fieldToString(contentHash)) : "No content",
 
     encrypted: parsed.encrypted === true || parsed.encrypted === "true",
 
@@ -64,6 +67,9 @@ export function parseAleoPost(data: AleoRaw, fallbackId?: number | string) {
 
     comments: parsed.comments ? Number(cleanAleoValue(parsed.comments)) : 0,
 
-    timestamp: parsed.timestamp ? Number(cleanAleoValue(parsed.timestamp)) : 0,
+    // 🔒 MATCH STORE TYPE (string)
+    timestamp: parsed.timestamp
+      ? String(cleanAleoValue(parsed.timestamp))
+      : "0",
   };
 }
