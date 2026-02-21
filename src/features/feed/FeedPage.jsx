@@ -14,8 +14,14 @@ import { useInView } from "react-intersection-observer";
 import { useWallet } from "@provablehq/aleo-wallet-adaptor-react";
 import { usePostStore } from "../../store/usePostStore";
 import { fieldToString, parseAleoPost } from "../../lib/aleo/index";
-import {ALEO_PROGRAM_NAME,ALEO_FEE,TOKEN_DECIMALS,toU128,DECIMAL_MULTIPLIER} from "../../config/config"
-import {usePostSync} from "../../hooks/usePostSync"
+import {
+  ALEO_PROGRAM_NAME,
+  ALEO_FEE,
+  TOKEN_DECIMALS,
+  toU128,
+  DECIMAL_MULTIPLIER,
+} from "../../config/config";
+import { usePostSync } from "../../hooks/usePostSync";
 
 const CATEGORIES = ["All", "Whistleblowing", "Finance", "Private Communities"];
 const SORT_OPTIONS = [
@@ -30,7 +36,7 @@ export default function FeedPage() {
   const [mounted, setMounted] = useState(false);
   const [maxPostId, setMaxPostId] = useState(1);
 
-  const { connected, address } = useWallet();
+  const { connected, address, decrypt } = useWallet();
   const { ref, inView } = useInView();
 
   // ✅ Zustand store
@@ -52,7 +58,9 @@ export default function FeedPage() {
     }
   };
 
-  const fetchPostsBatch = async (batchSize = 5) => {
+  // let decryptPost;
+
+  const fetchPostsBatch = async (batchSize ) => {
     let fetchedCount = 0;
 
     for (let i = 0; i < batchSize; i++) {
@@ -66,18 +74,22 @@ export default function FeedPage() {
 
         const data = await res.json();
 
-        // console.log("res post", data);
+        console.log("post data", data);
+
+        // decryptPost = await decrypt(data);
+
+        // console.log("post:", decryptPost);
 
         const formattedPost = parseAleoPost(data);
 
-      if (formattedPost) {
-        addOrUpdatePost(formattedPost);
-        // console.log("Stored post:", formattedPost);
-        fetchedCount++;
-      }
+        if (formattedPost) {
+          addOrUpdatePost(formattedPost);
+          console.log("Stored post:", formattedPost);
+          fetchedCount++;
+        }
         addOrUpdatePost(formattedPost);
 
-        // console.log("Stored post:", formattedPost);
+        console.log("Stored post:", formattedPost);
 
         fetchedCount++;
       } catch (err) {
@@ -93,7 +105,7 @@ export default function FeedPage() {
 
   // Initial fetch
   useEffect(() => {
-    fetchPostsBatch(5);
+    fetchPostsBatch(10);
   }, []);
 
   // Infinite scroll trigger
@@ -109,6 +121,7 @@ export default function FeedPage() {
 
   useEffect(() => {
     // console.log("Connected:", connected, address);
+    // console.log("decrypt post", decryptPost);
   }, [connected, address]);
   return (
     <div className="relative flex flex-col gap-6 feed-root">
@@ -204,7 +217,7 @@ export default function FeedPage() {
         {filtered.length > 0 ? (
           filtered.map((post, i) => (
             <div
-              key={post.id}
+              key={post?.id}
               className="post-card-wrapper"
               style={{ animationDelay: `${i * 80}ms` }}>
               <PostCard post={post} />

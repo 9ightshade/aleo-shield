@@ -6,6 +6,7 @@ import { X, Lock, Unlock, Shield, Hash, Send, ChevronDown } from "lucide-react";
 import CategorySelect from "./CategorySelect";
 import { useWallet } from "@provablehq/aleo-wallet-adaptor-react";
 import { stringToField, fetchPost } from "../../../lib/aleo/index";
+import { ALEO_PROGRAM_NAME, ALEO_FEE } from "../../../config/config";
 
 // const categories = [
 //   "Whistleblowing",
@@ -66,10 +67,10 @@ export default function CreatePostModal({ open, onClose }) {
       ]);
 
       const result = await executeTransaction({
-        program: "shadowsphere_social9.aleo",
+        program: ALEO_PROGRAM_NAME,
         function: "create_post",
         inputs: [contentField, "true", `${categoryValue}u8`],
-        fee: 100000,
+        fee: ALEO_FEE,
         privateFee: false,
       });
 

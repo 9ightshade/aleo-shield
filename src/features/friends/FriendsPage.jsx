@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 // ─── FriendsPage.jsx ──────────────────────────────────────────────────────────
 import { useMemo, useState } from "react";
 import { useFriendsStore } from "../../store/useFriendsStore";
@@ -58,14 +59,14 @@ export default function FriendsPage() {
     [],
   );
 
-  const friends = store?.friends?.length ? store.friends : mockFriends;
-  const incoming = store?.incoming?.length ? store.incoming : mockIncoming;
-  const outgoing = store?.outgoing?.length ? store.outgoing : mockOutgoing;
+  const friends = store?.friends?.length ? store.friends : null;
+  const incoming = store?.incoming?.length ? store.incoming : null;
+  const outgoing = store?.outgoing?.length ? store.outgoing : null;
 
   const counts = {
-    friends: friends.length,
-    incoming: incoming.length,
-    outgoing: outgoing.length,
+    friends: friends?.length,
+    incoming: incoming?.length,
+    outgoing: outgoing?.length,
   };
 
   const currentList =
@@ -120,7 +121,7 @@ export default function FriendsPage() {
 
         {/* ── List ────────────────────────────────── */}
         <div className="flex flex-col gap-3 friends-list">
-          {currentList.length === 0 ? (
+          {currentList?.length === 0 ? (
             <div className="flex flex-col items-center gap-4 py-16 friends-empty">
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600/20 to-purple-600/20 border border-indigo-500/20 flex items-center justify-center">
                 <Users size={24} className="text-indigo-400/50" />
@@ -141,9 +142,9 @@ export default function FriendsPage() {
               </div>
             </div>
           ) : (
-            currentList.map((item, i) => (
+            currentList?.map((item, i) => (
               <div
-                key={item.id}
+                key={item?.id}
                 className="friend-item"
                 style={{ animationDelay: `${i * 60}ms` }}
               >

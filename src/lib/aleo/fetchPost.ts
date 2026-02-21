@@ -1,10 +1,11 @@
 /**
  * Fetch a post by its transaction ID from Aleo testnet
  */
-export async function fetchPost(txId:string) {
+import { ALEO_PROGRAM_NAME } from "../../config/config";
+export async function fetchPost(txId: string) {
   try {
-    const programId = "shadowsphere_social9.aleo";
-    const url = `https://cors-anywhere.herokuapp.com/https://testnet.aleoscan.io/testnet/program/${programId}/mapping/posts/${txId}u32`;
+    const programId = ALEO_PROGRAM_NAME;
+    const url = `https://testnet.aleoscan.io/testnet/program/${programId}/mapping/posts/${txId}u32`;
 
     const res = await fetch(url);
     if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);

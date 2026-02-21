@@ -14,33 +14,33 @@ export default function PostCard({ post }) {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex flex-col gap-1">
-            <span className="text-sm font-medium">{post.alias}</span>
+            <span className="text-sm font-medium">{post?.alias}</span>
             <ReputationBadge
-              reputation={post.reputation}
-              verified={post.verified}
+              reputation={post?.reputation}
+              verified={post?.verified}
             />
           </div>
 
           <div className="flex flex-col items-end gap-1">
-            <CategoryTag category={post.category} />
+            <CategoryTag category={post?.category} />
             <span className="text-xs text-[var(--color-text-secondary)]">
-              {post.timestamp}
+              {post?.timestamp}
             </span>
           </div>
         </div>
 
         {/* Content */}
         <EncryptedContentWrapper
-          content={post.content}
-          encrypted={post.encrypted}
+          content={post?.content}
+          encrypted={post?.encrypted}
         />
 
         {/* Actions */}
         <PostActions
-          postId={post.id}
-          likes={post.likes}
-          comments={post.comments}
-          recipientAlias={post.alias}
+          postId={post?.id}
+          likes={post?.likes}
+          comments={post?.comments}
+          recipientAlias={post?.alias}
         />
       </Card>
     </div>
