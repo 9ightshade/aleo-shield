@@ -88,8 +88,8 @@ export default function CreatePostModal({ open, onClose }) {
         if (status.status === "Accepted") {
           console.log("✅ Post accepted:", status);
           console.log("transaction id", status.transactionId);
-          await usePostStore.getState().fetchPostsBatch(1);
-
+          // await usePostStore.getState().fetchPostsBatch(1);
+          fetchPostsBatch(1);
           const postData = await fetchPost(status.transactionId); //fetches data just to be sure its onchain
 
           console.log("🎯 On-chain Post Data:", postData);

@@ -35,14 +35,12 @@ export default function FeedPage() {
   const [sort, setSort] = useState("Latest");
   const [mounted, setMounted] = useState(false);
   const [maxPostId, setMaxPostId] = useState(1);
-
+  // const { fetchPostsBatch } = usePostStore();
   const { connected, address, decrypt } = useWallet();
   const { ref, inView } = useInView();
 
-  
   const posts = usePostStore((state) => state.posts);
   const addOrUpdatePost = usePostStore((state) => state.addOrUpdatePost);
-  
 
   const PROGRAM_ID = ALEO_PROGRAM_NAME;
 
