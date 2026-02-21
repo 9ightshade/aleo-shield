@@ -60,7 +60,50 @@ export default function FeedPage() {
 
   // let decryptPost;
 
-  const fetchPostsBatch = async (batchSize ) => {
+  // const fetchPostsBatch = async (batchSize ) => {
+  //   let fetchedCount = 0;
+
+  //   for (let i = 0; i < batchSize; i++) {
+  //     const postId = maxPostId + i;
+
+  //     const endpoint = `https://testnet.aleoscan.io/testnet/program/${PROGRAM_ID}/mapping/posts/${postId}u32`;
+
+  //     try {
+  //       const res = await fetch(endpoint);
+  //       if (!res.ok) throw new Error("Not found");
+
+  //       const data = await res.json();
+
+  //       console.log(data);
+
+  //       // decryptPost = await decrypt(data);
+
+  //       // console.log("post:", decryptPost);
+
+  //       const formattedPost = parseAleoPost(data);
+
+  //       if (formattedPost) {
+  //         addOrUpdatePost(formattedPost);
+  //         console.log("Stored post:", formattedPost);
+  //         fetchedCount++;
+  //       }
+  //       addOrUpdatePost(formattedPost);
+
+  //       console.log("Stored post:", formattedPost);
+
+  //       fetchedCount++;
+  //     } catch (err) {
+  //       console.warn(`Skipping post ${postId}`);
+  //     }
+  //   }
+
+  //   // Move pointer forward only by successful fetches
+  //   if (fetchedCount > 0) {
+  //     setMaxPostId((prev) => prev + fetchedCount);
+  //   }
+  // };
+  const fetchPostsBatch = async (batchSize) => {
+    const newPosts = [];
     let fetchedCount = 0;
 
     for (let i = 0; i < batchSize; i++) {
@@ -74,30 +117,42 @@ export default function FeedPage() {
 
         const data = await res.json();
 
-        console.log("post data", data);
-
-        // decryptPost = await decrypt(data);
-
-        // console.log("post:", decryptPost);
-
-        const formattedPost = parseAleoPost(data);
-
-        if (formattedPost) {
-          addOrUpdatePost(formattedPost);
-          console.log("Stored post:", formattedPost);
-          fetchedCount++;
+        if (!data) {
+          continue;
         }
-        addOrUpdatePost(formattedPost);
+        console.log("Raw post:", typeof data);
 
-        console.log("Stored post:", formattedPost);
+        const formattedPost = parseAleoPost(data, postId);
 
+        if (!formattedPost?.id) continue;
+
+        newPosts.push(formattedPost);
         fetchedCount++;
-      } catch (err) {
+      } catch {
         console.warn(`Skipping post ${postId}`);
       }
     }
 
-    // Move pointer forward only by successful fetches
+    if (newPosts.length > 0) {
+      const { posts, setPosts } = usePostStore.getState();
+
+      const merged = [...posts];
+
+      newPosts.forEach((incoming) => {
+        const index = merged.findIndex((p) => p?.id === incoming?.id);
+
+        if (index > -1) {
+          merged[index] = { ...merged[index], ...incoming };
+        } else {
+          merged.push(incoming);
+        }
+      });
+
+      setPosts(merged);
+
+      console.log("Full posts array:", merged);
+    }
+
     if (fetchedCount > 0) {
       setMaxPostId((prev) => prev + fetchedCount);
     }
@@ -110,9 +165,15 @@ export default function FeedPage() {
 
   // Infinite scroll trigger
   useEffect(() => {
-    if (inView) {
-      fetchPostsBatch(5);
-    }
+    if (!inView) return;
+
+    let mounted = true;
+
+    if (mounted) fetchPostsBatch(5);
+
+    return () => {
+      mounted = false;
+    };
   }, [inView]);
 
   const filtered = posts.filter((p) => !filter || p.category === filter);

@@ -1,53 +1,69 @@
-// utils/parseAleoPost.ts
 import { fieldToString } from "../../lib/aleo/index";
 
-export function parseAleoPost(data: any, fallbackId?: number | string) {
+type AleoRaw = Record<string, any> | string | null;
+
+const cleanAleoValue = (value: any): string =>
+  String(value)
+    .replace(/u\d+$/, "")
+    .replace(/field$/, "");
+
+const parseStructString = (raw: string): Record<string, string> => {
+  return Object.fromEntries(
+    raw
+      .replace(/^[{\s]+|[}\s]+$/g, "") 
+      .split(",")
+      .map((pair) => {
+        const [key, value] = pair.split(":").map((s) => s.trim());
+        return [key, value];
+      }),
+  );
+};
+
+export function parseAleoPost(data: AleoRaw, fallbackId?: number | string) {
   if (!data) return null;
 
-  // Use the ID from data, if missing use the fallbackId from the loop
-  const rawPostId = data.post_id
-    ? String(data.post_id).replace("u32", "")
-    : null;
-  const id = rawPostId ?? String(fallbackId) ?? "0";
+  // 🔎 Handle serialized struct from Aleoscan
+  const parsed: Record<string, any> =
+    typeof data === "string" ? parseStructString(data) : data;
 
-  const author = data.author ? String(data.author) : "anon";
+  const rawPostId = parsed.post_id ? cleanAleoValue(parsed.post_id) : null;
 
-  // Clean 'field' suffix before converting
-  const contentHash = data.content_hash
-    ? String(data.content_hash).replace("field", "")
+  const id = rawPostId ?? String(fallbackId ?? "0");
+
+  const author = parsed.author ? String(parsed.author) : "anon";
+
+  const contentHash = parsed.content_hash
+    ? cleanAleoValue(parsed.content_hash)
     : null;
+
+  const categoryMap: Record<number, string> = {
+    1: "Whistleblowing",
+    2: "Finance",
+    3: "Private Communities",
+  };
+
+  const categoryRaw = parsed.category
+    ? Number(cleanAleoValue(parsed.category))
+    : 0;
 
   return {
     id,
-    author, // Keeping raw author for logic
+    author,
     alias: "aleo..." + author.slice(-6),
-    reputation: Math.floor(Math.random() * 200), // Fallback/Placeholder
+    reputation: Math.floor(Math.random() * 200),
     verified: true,
-    category:
-      data.category != null
-        ? (() => {
-            const cat = Number(data.category.toString().replace("u8", ""));
-            switch (cat) {
-              case 1:
-                return "Whistleblowing";
-              case 2:
-                return "Finance";
-              case 3:
-                return "Private Communities";
-              default:
-                return "All";
-            }
-          })()
-        : "All",
-    // Convert the field back to a readable string
+
+    category: categoryMap[categoryRaw] ?? "All",
+
+    // ✅ content_hash now correctly extracted and converted
     content: contentHash ? fieldToString(contentHash) : "No content",
-    encrypted: Boolean(data.encrypted),
-    likes: data.likes ? Number(String(data.likes).replace("u32", "")) : 0,
-    comments: data.comments
-      ? Number(String(data.comments).replace("u32", ""))
-      : 0,
-    timestamp: data.timestamp
-      ? `${Number(String(data.timestamp).replace("u32", ""))} blocks ago`
-      : "0 blocks ago",
+
+    encrypted: parsed.encrypted === true || parsed.encrypted === "true",
+
+    likes: parsed.likes ? Number(cleanAleoValue(parsed.likes)) : 0,
+
+    comments: parsed.comments ? Number(cleanAleoValue(parsed.comments)) : 0,
+
+    timestamp: parsed.timestamp ? Number(cleanAleoValue(parsed.timestamp)) : 0,
   };
 }
